@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "Graphology",
+    "slug": "graphology",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "ios": {
+      "bundleIdentifier": "com.poser8.graphology",
+      "supportsTablet": false
+    },
+    "android": {
+      "package": "com.poser8.graphology"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-camera",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Graphology to access your photos to analyze handwriting samples."
+        }
+      ]
+    ]
+  }
+}
