@@ -1,15 +1,30 @@
 import { useEffect } from 'react'
 import { Stack } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
-import { View, StyleSheet } from 'react-native'
+import { Platform, View, StyleSheet } from 'react-native'
 import { Colors } from '@/constants/theme'
 import { supabase, getUserProfile, getAnalysesCount } from '@/lib/supabase'
 import { useStore } from '@/lib/store'
+import Purchases, { LOG_LEVEL } from 'react-native-purchases'
 
 export default function RootLayout() {
   const setUserId = useStore((s) => s.setUserId)
   const setProfile = useStore((s) => s.setProfile)
   const setAnalysesRemaining = useStore((s) => s.setAnalysesRemaining)
+
+  useEffect(() => {
+    const apiKey = Platform.OS === 'ios'
+      ? process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY ?? ''
+      : process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY ?? ''
+    if (apiKey) {
+      if (__DEV__) Purchases.setLogLevel(LOG_LEVEL.VERBOSE)
+      try {
+        Purchases.configure({ apiKey })
+      } catch (err) {
+        if (__DEV__) console.warn('[rc][graphology][configure] Purchases.configure failed:', err)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     // Bootstrap auth session
@@ -63,6 +78,7 @@ export default function RootLayout() {
         />
         <Stack.Screen name="history" />
         <Stack.Screen name="learn" />
+        <Stack.Screen name="paywall" options={{ animation: 'slide_from_bottom', presentation: 'modal' }} />
       </Stack>
     </View>
   )

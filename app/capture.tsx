@@ -13,6 +13,7 @@ import { CameraView, useCameraPermissions } from 'expo-camera'
 import * as ImagePicker from 'expo-image-picker'
 import * as ImageManipulator from 'expo-image-manipulator'
 import { useRouter } from 'expo-router'
+import Purchases from 'react-native-purchases'
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme'
 import { useStore } from '@/lib/store'
 
@@ -37,24 +38,27 @@ export default function CaptureScreen() {
   const setCapturedImageBase64 = useStore((s) => s.setCapturedImageBase64)
   const analysesRemaining = useStore((s) => s.analysesRemaining)
 
-  // Check free tier before allowing capture
-  const checkFreeTier = useCallback(() => {
-    if (analysesRemaining <= 0) {
-      Alert.alert(
-        'Out of Free Analyses',
-        'You\'ve used your 2 free analyses this month. Upgrade to Premium for unlimited analyses.',
-        [
-          { text: 'Not Now', style: 'cancel' },
-          { text: 'Upgrade', onPress: () => { /* open paywall */ } },
-        ]
-      )
+  // Check free tier before allowing capture — uses RevenueCat for premium check
+  const checkFreeTier = useCallback(async (): Promise<boolean> => {
+    let isPremium = false
+    try {
+      const customerInfo = await Purchases.getCustomerInfo()
+      isPremium = !!customerInfo.entitlements.active['premium']
+    } catch (err) {
+      if (__DEV__) console.warn('[rc][graphology][capture] getCustomerInfo failed:', err)
+      // isPremium stays false (defensive). Don't reroute to paywall on transient RC errors —
+      // free-tier counter-based gate below already enforces correct UX.
+    }
+
+    if (!isPremium && analysesRemaining <= 0) {
+      router.push('/paywall')
       return false
     }
     return true
-  }, [analysesRemaining])
+  }, [analysesRemaining, router])
 
   const handleCapture = useCallback(async () => {
-    if (!checkFreeTier()) return
+    if (!await checkFreeTier()) return
     if (!cameraRef.current || isCapturing) return
 
     setIsCapturing(true)
@@ -106,7 +110,7 @@ export default function CaptureScreen() {
   }, [cameraRef, isCapturing, checkFreeTier])
 
   const handleUploadFromPhotos = useCallback(async () => {
-    if (!checkFreeTier()) return
+    if (!await checkFreeTier()) return
 
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
     if (status !== 'granted') {
