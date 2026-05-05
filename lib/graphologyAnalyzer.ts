@@ -1,3 +1,5 @@
+import { log } from './log'
+
 function assertGraphologyOracleUrl(): string {
   // Boot-time assertion: if this module is imported, the URL must exist.
   // Surfacing this as an Error here means the failure is visible at the
@@ -142,7 +144,7 @@ export async function analyzeHandwriting(
   imageBase64: string,
   onStream: StreamCallback
 ): Promise<GraphologyReport> {
-  console.info('[graphologyAnalyzer] Starting analysis, image size:', imageBase64.length)
+  log.info('[graphologyAnalyzer] Starting analysis, image size:', imageBase64.length)
 
   const response = await fetch(GRAPHOLOGY_ORACLE_URL, {
     method: 'POST',
@@ -156,7 +158,7 @@ export async function analyzeHandwriting(
 
   if (!response.ok) {
     const errText = await response.text()
-    console.error('[graphologyAnalyzer] Oracle error:', response.status, errText)
+    log.error('[graphologyAnalyzer] Oracle error:', response.status, errText)
     throw new Error(`Oracle returned ${response.status}: ${errText}`)
   }
 
@@ -204,7 +206,7 @@ export async function analyzeHandwriting(
   // Signal completion
   onStream({ section: currentSection, text: '', done: true })
 
-  console.info('[graphologyAnalyzer] Analysis complete, total chars:', rawText.length)
+  log.info('[graphologyAnalyzer] Analysis complete, total chars:', rawText.length)
 
   // Parse structured report from raw text
   return parseReport(rawText)

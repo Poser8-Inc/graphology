@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router'
 import Purchases from 'react-native-purchases'
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme'
 import { useStore } from '@/lib/store'
+import { log } from '@/lib/log'
 
 const { width, height } = Dimensions.get('window')
 
@@ -45,7 +46,7 @@ export default function CaptureScreen() {
       const customerInfo = await Purchases.getCustomerInfo()
       isPremium = !!customerInfo.entitlements.active['premium']
     } catch (err) {
-      if (__DEV__) console.warn('[rc][graphology][capture] getCustomerInfo failed:', err)
+      log.warn('[rc][graphology][capture] getCustomerInfo failed:', err)
       // isPremium stays false (defensive). Don't reroute to paywall on transient RC errors —
       // free-tier counter-based gate below already enforces correct UX.
     }
@@ -102,7 +103,7 @@ export default function CaptureScreen() {
       setPreviewBase64(manipulated.base64 ?? null)
       setScreenState('preview')
     } catch (err) {
-      console.error('[capture] Error taking photo:', err)
+      log.error('[capture] Error taking photo:', err)
       Alert.alert('Capture Error', 'Failed to take photo. Please try again.')
     } finally {
       setIsCapturing(false)
@@ -145,7 +146,7 @@ export default function CaptureScreen() {
       setPreviewBase64(manipulated.base64 ?? null)
       setScreenState('preview')
     } catch (err) {
-      console.error('[capture] Image processing error:', err)
+      log.error('[capture] Image processing error:', err)
       setScreenState('camera')
       Alert.alert('Processing Error', 'Could not process the selected image.')
     }

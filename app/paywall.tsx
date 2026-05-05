@@ -21,6 +21,7 @@ import Animated, {
 } from 'react-native-reanimated'
 import Purchases, { type PurchasesPackage } from 'react-native-purchases'
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme'
+import { log } from '@/lib/log'
 
 const FEATURES = [
   { glyph: '—', label: 'Unlimited handwriting analyses' },
@@ -103,7 +104,7 @@ export default function PaywallScreen() {
       })
       .catch((err) => {
         if (cancelled) return
-        if (__DEV__) console.warn('[rc][graphology][paywall-offerings] getOfferings failed:', err)
+        log.warn('[rc][graphology][paywall-offerings] getOfferings failed:', err)
         setOfferingsError('Pricing unavailable. Check your connection and try again.')
       })
     return () => { cancelled = true }
@@ -157,7 +158,7 @@ export default function PaywallScreen() {
       }
     } catch (err: any) {
       if (!err?.userCancelled) {
-        if (__DEV__) console.warn('[rc][graphology][purchase] purchasePackage failed:', err)
+        log.warn('[rc][graphology][purchase] purchasePackage failed:', err)
         Alert.alert('Purchase Failed', err?.message ?? 'Something went wrong. Please try again.')
       }
     } finally {
@@ -176,7 +177,7 @@ export default function PaywallScreen() {
         Alert.alert('No Purchases Found', 'No previous purchases were found for this account.')
       }
     } catch (err: any) {
-      if (__DEV__) console.warn('[rc][graphology][restore] restorePurchases failed:', err)
+      log.warn('[rc][graphology][restore] restorePurchases failed:', err)
       Alert.alert('Restore Failed', err?.message ?? 'Could not restore purchases.')
     } finally {
       setIsRestoring(false)

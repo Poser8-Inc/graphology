@@ -6,6 +6,7 @@ import { Colors } from '@/constants/theme'
 import { supabase, getUserProfile, getAnalysesCount } from '@/lib/supabase'
 import { useStore } from '@/lib/store'
 import Purchases, { LOG_LEVEL } from 'react-native-purchases'
+import { log } from '@/lib/log'
 
 export default function RootLayout() {
   const setUserId = useStore((s) => s.setUserId)
@@ -21,7 +22,7 @@ export default function RootLayout() {
       try {
         Purchases.configure({ apiKey })
       } catch (err) {
-        if (__DEV__) console.warn('[rc][graphology][configure] Purchases.configure failed:', err)
+        log.warn('[rc][graphology][configure] Purchases.configure failed:', err)
       }
     }
   }, [])

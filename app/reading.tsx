@@ -18,6 +18,7 @@ import { analyzeHandwriting } from '@/lib/graphologyAnalyzer'
 import type { SectionKey } from '@/lib/graphologyAnalyzer'
 import { saveReading } from '@/lib/supabase'
 import { HandwritingAnnotator } from '@/components/HandwritingAnnotator'
+import { log } from '@/lib/log'
 
 const { width } = Dimensions.get('window')
 
@@ -139,7 +140,7 @@ export default function ReadingScreen() {
   // Start analysis on mount
   useEffect(() => {
     if (!capturedImageBase64) {
-      console.warn('[reading] No image base64 in store — redirecting to capture')
+      log.warn('[reading] No image base64 in store — redirecting to capture')
       router.replace('/capture')
       return
     }
@@ -220,7 +221,7 @@ export default function ReadingScreen() {
         })
       }
     } catch (err: any) {
-      console.error('[reading] Analysis failed:', err)
+      log.error('[reading] Analysis failed:', err)
       setAnalysisError(err?.message ?? 'Analysis failed. Please try again.')
       setAnalysisStatus('error')
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
