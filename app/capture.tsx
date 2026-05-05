@@ -179,10 +179,20 @@ export default function CaptureScreen() {
     return (
       <View style={styles.center}>
         <Text style={styles.permText}>Camera access is required to capture handwriting.</Text>
-        <TouchableOpacity style={styles.permBtn} onPress={requestPermission}>
+        <TouchableOpacity
+          style={styles.permBtn}
+          onPress={requestPermission}
+          accessibilityRole="button"
+          accessibilityLabel="Grant camera access"
+        >
           <Text style={styles.permBtnText}>Grant Access</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.uploadBtn} onPress={handleUploadFromPhotos}>
+        <TouchableOpacity
+          style={styles.uploadBtn}
+          onPress={handleUploadFromPhotos}
+          accessibilityRole="button"
+          accessibilityLabel="Upload handwriting from photos"
+        >
           <Text style={styles.uploadBtnText}>Upload from Photos Instead</Text>
         </TouchableOpacity>
       </View>
@@ -204,10 +214,20 @@ export default function CaptureScreen() {
         </View>
 
         <View style={styles.previewActions}>
-          <TouchableOpacity style={styles.retakeBtn} onPress={handleRetake}>
+          <TouchableOpacity
+            style={styles.retakeBtn}
+            onPress={handleRetake}
+            accessibilityRole="button"
+            accessibilityLabel="Retake photo"
+          >
             <Text style={styles.retakeBtnText}>Retake</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.useBtn} onPress={handleUseThisSample}>
+          <TouchableOpacity
+            style={styles.useBtn}
+            onPress={handleUseThisSample}
+            accessibilityRole="button"
+            accessibilityLabel="Use this sample"
+          >
             <Text style={styles.useBtnText}>Use This Sample</Text>
             <Text style={styles.useBtnArrow}>→</Text>
           </TouchableOpacity>
@@ -251,7 +271,12 @@ export default function CaptureScreen() {
 
             {/* Shutter + upload row */}
             <View style={styles.shutterRow}>
-              <TouchableOpacity style={styles.uploadPhotoBtn} onPress={handleUploadFromPhotos}>
+              <TouchableOpacity
+                style={styles.uploadPhotoBtn}
+                onPress={handleUploadFromPhotos}
+                accessibilityRole="button"
+                accessibilityLabel="Upload from photos"
+              >
                 <Text style={styles.uploadPhotoIcon}>⬆</Text>
                 <Text style={styles.uploadPhotoLabel}>Upload</Text>
               </TouchableOpacity>
@@ -260,6 +285,9 @@ export default function CaptureScreen() {
                 style={[styles.shutterBtn, isCapturing && styles.shutterBtnDisabled]}
                 onPress={handleCapture}
                 disabled={isCapturing}
+                accessibilityRole="button"
+                accessibilityLabel="Capture photo"
+                accessibilityState={{ disabled: isCapturing }}
               >
                 {isCapturing ? (
                   <ActivityIndicator color={Colors.ink} size="small" />
@@ -275,7 +303,12 @@ export default function CaptureScreen() {
             <Text style={styles.tapInstruction}>Tap to capture</Text>
 
             {/* Back button */}
-            <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+            <TouchableOpacity
+              style={styles.backBtn}
+              onPress={() => router.back()}
+              accessibilityRole="link"
+              accessibilityLabel="Back"
+            >
               <Text style={styles.backText}>← Back</Text>
             </TouchableOpacity>
           </View>

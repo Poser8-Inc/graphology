@@ -186,7 +186,12 @@ export default function LearnScreen() {
     >
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => router.back()}
+          accessibilityRole="link"
+          accessibilityLabel="Back"
+        >
           <Text style={styles.backText}>← Back</Text>
         </TouchableOpacity>
         <Text style={styles.title}>The Science of Graphology</Text>
@@ -309,6 +314,8 @@ export default function LearnScreen() {
       <TouchableOpacity
         style={styles.ctaBtn}
         onPress={() => router.push('/instructions')}
+        accessibilityRole="link"
+        accessibilityLabel="Analyze my handwriting"
         activeOpacity={0.85}
       >
         <Text style={styles.ctaBtnText}>Analyze My Handwriting</Text>

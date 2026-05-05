@@ -39,7 +39,13 @@ function HistoryCard({ reading, onPress }: { reading: GraphologyReading; onPress
   const topTrait = extractTopTrait(reading)
 
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
+    <TouchableOpacity
+      style={styles.card}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`Open analysis from ${formatDate(reading.created_at)}: ${topTrait}`}
+      activeOpacity={0.8}
+    >
       {/* Thumbnail */}
       <View style={styles.thumbnail}>
         {reading.image_thumbnail ? (
@@ -98,7 +104,12 @@ export default function HistoryScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => router.back()}
+          accessibilityRole="link"
+          accessibilityLabel="Back"
+        >
           <Text style={styles.backText}>← Back</Text>
         </TouchableOpacity>
         <Text style={styles.title}>Past Analyses</Text>
@@ -126,7 +137,12 @@ export default function HistoryScreen() {
           <Text style={styles.emptyText}>
             Your past handwriting analyses will appear here.
           </Text>
-          <TouchableOpacity style={styles.startBtn} onPress={() => router.push('/instructions')}>
+          <TouchableOpacity
+            style={styles.startBtn}
+            onPress={() => router.push('/instructions')}
+            accessibilityRole="link"
+            accessibilityLabel="Start first analysis"
+          >
             <Text style={styles.startBtnText}>Start First Analysis</Text>
           </TouchableOpacity>
         </View>

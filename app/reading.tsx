@@ -243,10 +243,19 @@ export default function ReadingScreen() {
         <Text style={styles.errorIcon}>⚠</Text>
         <Text style={styles.errorTitle}>Analysis Failed</Text>
         <Text style={styles.errorText}>{analysisError}</Text>
-        <TouchableOpacity style={styles.errorRetryBtn} onPress={startAnalysis}>
+        <TouchableOpacity
+          style={styles.errorRetryBtn}
+          onPress={startAnalysis}
+          accessibilityRole="button"
+          accessibilityLabel="Try again"
+        >
           <Text style={styles.errorRetryText}>Try Again</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          accessibilityRole="link"
+          accessibilityLabel="Back to camera"
+        >
           <Text style={styles.errorBackText}>← Back to Camera</Text>
         </TouchableOpacity>
       </View>
@@ -376,12 +385,16 @@ export default function ReadingScreen() {
                   resetAnalysis()
                   router.replace('/instructions')
                 }}
+                accessibilityRole="link"
+                accessibilityLabel="New analysis"
               >
                 <Text style={styles.newAnalysisBtnText}>New Analysis</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.historyBtn}
                 onPress={() => router.push('/history')}
+                accessibilityRole="link"
+                accessibilityLabel="View history"
               >
                 <Text style={styles.historyBtnText}>View History</Text>
               </TouchableOpacity>
@@ -399,6 +412,8 @@ export default function ReadingScreen() {
           resetAnalysis()
           router.replace('/')
         }}
+        accessibilityRole="button"
+        accessibilityLabel="Close report"
       >
         <Text style={styles.floatingBackText}>×</Text>
       </TouchableOpacity>

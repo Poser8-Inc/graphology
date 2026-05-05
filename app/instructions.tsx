@@ -46,7 +46,12 @@ export default function InstructionsScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Back */}
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => router.back()}
+          accessibilityRole="link"
+          accessibilityLabel="Back"
+        >
           <Text style={styles.backText}>← Back</Text>
         </TouchableOpacity>
 
@@ -111,6 +116,8 @@ export default function InstructionsScreen() {
         <TouchableOpacity
           style={styles.ctaButton}
           onPress={() => router.push('/capture')}
+          accessibilityRole="link"
+          accessibilityLabel="Ready to write — open capture"
           activeOpacity={0.85}
         >
           <Text style={styles.ctaText}>Ready to Write</Text>

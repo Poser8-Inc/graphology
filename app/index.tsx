@@ -107,6 +107,8 @@ export default function HomeScreen() {
       <TouchableOpacity
         style={styles.primaryButton}
         onPress={() => router.push('/instructions')}
+        accessibilityRole="link"
+        accessibilityLabel="Analyze my handwriting"
         activeOpacity={0.85}
       >
         <Text style={styles.primaryButtonText}>Analyze My Handwriting</Text>
@@ -117,6 +119,8 @@ export default function HomeScreen() {
       <TouchableOpacity
         style={styles.secondaryButton}
         onPress={() => router.push('/learn')}
+        accessibilityRole="link"
+        accessibilityLabel="Learn about graphology"
         activeOpacity={0.85}
       >
         <Text style={styles.secondaryButtonText}>Learn About Graphology</Text>
@@ -124,7 +128,11 @@ export default function HomeScreen() {
 
       {/* Footer links */}
       <View style={styles.footerLinks}>
-        <TouchableOpacity onPress={() => router.push('/history')}>
+        <TouchableOpacity
+          onPress={() => router.push('/history')}
+          accessibilityRole="link"
+          accessibilityLabel="Past analyses"
+        >
           <Text style={styles.footerLink}>Past Analyses</Text>
         </TouchableOpacity>
         <Text style={styles.footerDivider}>·</Text>
