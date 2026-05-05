@@ -11,7 +11,17 @@ function assertGraphologyOracleUrl(): string {
   }
   return url
 }
+function assertSupabaseAnonKey(): string {
+  const key = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
+  if (!key) {
+    throw new Error(
+      '[graphology/analyzer] EXPO_PUBLIC_SUPABASE_ANON_KEY is not set in .env'
+    )
+  }
+  return key
+}
 const GRAPHOLOGY_ORACLE_URL: string = assertGraphologyOracleUrl()
+const SUPABASE_ANON_KEY: string = assertSupabaseAnonKey()
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -136,7 +146,11 @@ export async function analyzeHandwriting(
 
   const response = await fetch(GRAPHOLOGY_ORACLE_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'apikey': SUPABASE_ANON_KEY,
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify({ imageBase64 }),
   })
 
