@@ -4,6 +4,9 @@ import Svg, { Line, Circle, Text as SvgText, G } from 'react-native-svg'
 import { Colors } from '@/constants/theme'
 import type { AnalysisSection } from '@/lib/store'
 
+const AnimatedView = Animated.View
+const AnimatedText = Animated.Text
+
 const { width } = Dimensions.get('window')
 const ANNOTATOR_WIDTH = width - 48
 const ANNOTATOR_HEIGHT = ANNOTATOR_WIDTH * 0.6
@@ -180,7 +183,7 @@ export function HandwritingAnnotator({ imageUri, report, isAnalyzing }: Props) {
           const labelTop = ann.y > 75 ? ay - 24 : ay - 8
 
           return (
-            <Animated.View
+            <AnimatedView
               key={ann.id}
               style={[
                 styles.annotationLabel,
@@ -192,17 +195,17 @@ export function HandwritingAnnotator({ imageUri, report, isAnalyzing }: Props) {
                 },
               ]}
             >
-              <Animated.Text style={[styles.annotationLabelText, { color: ann.color }]}>
+              <AnimatedText style={[styles.annotationLabelText, { color: ann.color }]}>
                 {ann.label}
-              </Animated.Text>
-            </Animated.View>
+              </AnimatedText>
+            </AnimatedView>
           )
         })}
       </View>
 
       {/* Analyzing pulse indicator */}
       {isAnalyzing && (
-        <Animated.View
+        <AnimatedView
           style={[
             styles.analyzingBadge,
             {
@@ -213,7 +216,7 @@ export function HandwritingAnnotator({ imageUri, report, isAnalyzing }: Props) {
             },
           ]}
         >
-        </Animated.View>
+        </AnimatedView>
       )}
 
       {/* Forensic label */}
