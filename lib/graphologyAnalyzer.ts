@@ -1,4 +1,17 @@
-const GRAPHOLOGY_ORACLE_URL = process.env.EXPO_PUBLIC_GRAPHOLOGY_ORACLE_URL!
+function assertGraphologyOracleUrl(): string {
+  // Boot-time assertion: if this module is imported, the URL must exist.
+  // Surfacing this as an Error here means the failure is visible at the
+  // moment the analyzer is paged in (instructions / capture flow), not
+  // mid-fetch with a confusing "fetch undefined" symptom.
+  const url = process.env.EXPO_PUBLIC_GRAPHOLOGY_ORACLE_URL
+  if (!url) {
+    throw new Error(
+      '[graphology/analyzer] EXPO_PUBLIC_GRAPHOLOGY_ORACLE_URL is not set in .env'
+    )
+  }
+  return url
+}
+const GRAPHOLOGY_ORACLE_URL: string = assertGraphologyOracleUrl()
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
