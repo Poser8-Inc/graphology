@@ -11,7 +11,11 @@
       "supportsTablet": false
     },
     "android": {
-      "package": "com.poser8.graphology"
+      "package": "com.poser8.graphology",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0A0908"
+      }
     },
     "plugins": [
       "expo-router",
@@ -22,6 +26,13 @@
           "photosPermission": "Allow Graphology to access your photos to analyze handwriting samples."
         }
       ]
-    ]
+    ],
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0A0908"
+    },
+    "scheme": "graphology"
   }
 }
