@@ -7,11 +7,11 @@
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "ios": {
-      "bundleIdentifier": "com.poser8.graphology",
+      "bundleIdentifier": "app.templari.graphology",
       "supportsTablet": false
     },
     "android": {
-      "package": "com.poser8.graphology",
+      "package": "app.templari.graphology",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0A0908"
