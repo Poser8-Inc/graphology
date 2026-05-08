@@ -8,14 +8,21 @@
     "newArchEnabled": true,
     "ios": {
       "bundleIdentifier": "app.templari.graphology",
-      "supportsTablet": false
+      "supportsTablet": false,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "app.templari.graphology",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0A0908"
-      }
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -25,7 +32,16 @@
         {
           "photosPermission": "Allow Graphology to access your photos to analyze handwriting samples."
         }
-      ]
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "kotlinVersion": "1.9.25"
+          }
+        }
+      ],
+      "expo-secure-store"
     ],
     "icon": "./assets/icon.png",
     "splash": {
@@ -33,6 +49,15 @@
       "resizeMode": "contain",
       "backgroundColor": "#0A0908"
     },
-    "scheme": "graphology"
+    "scheme": "graphology",
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "77d3df15-4f62-4a24-a99d-c1edecf9bb20"
+      }
+    },
+    "owner": "poser8"
   }
 }
