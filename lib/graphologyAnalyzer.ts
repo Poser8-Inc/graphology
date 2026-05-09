@@ -1,4 +1,5 @@
 import { log } from './log'
+import { getAccessToken } from './supabase'
 
 function assertGraphologyOracleUrl(): string {
   // Boot-time assertion: if this module is imported, the URL must exist.
@@ -146,10 +147,14 @@ export async function analyzeHandwriting(
 ): Promise<GraphologyReport> {
   log.info('[graphologyAnalyzer] Starting analysis, image size:', imageBase64.length)
 
+  const accessToken = await getAccessToken()
   const response = await fetch(GRAPHOLOGY_ORACLE_URL, {
     method: 'POST',
+    // RN-specific: opt into response.body streaming on Android (off by default)
+    // @ts-ignore — reactNative is RN-only fetch option, not in fetch types
+    reactNative: { textStreaming: true },
     headers: {
-      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'Authorization': `Bearer ${accessToken}`,
       'apikey': SUPABASE_ANON_KEY,
       'Content-Type': 'application/json',
     },

@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Stack } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { Platform, View, StyleSheet } from 'react-native'
+import * as NavigationBar from 'expo-navigation-bar'
 import { Colors } from '@/constants/theme'
 import { supabase, getUserProfile, getAnalysesCount } from '@/lib/supabase'
 import { useStore } from '@/lib/store'
@@ -12,6 +13,13 @@ export default function RootLayout() {
   const setUserId = useStore((s) => s.setUserId)
   const setProfile = useStore((s) => s.setProfile)
   const setAnalysesRemaining = useStore((s) => s.setAnalysesRemaining)
+
+  useEffect(() => {
+    if (Platform.OS === 'android') {
+      NavigationBar.setBehaviorAsync('overlay-swipe').catch(() => {})
+      NavigationBar.setVisibilityAsync('hidden').catch(() => {})
+    }
+  }, [])
 
   useEffect(() => {
     const apiKey = Platform.OS === 'ios'
@@ -28,10 +36,14 @@ export default function RootLayout() {
   }, [])
 
   useEffect(() => {
-    // Bootstrap auth session
+    // Bootstrap auth session — sign in anonymously if no session yet
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         bootstrapUser(session.user.id)
+      } else {
+        supabase.auth.signInAnonymously().catch((err) => {
+          log.warn('[graphology][auth] signInAnonymously failed:', err)
+        })
       }
     })
 
