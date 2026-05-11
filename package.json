@@ -21,7 +21,7 @@
     "react-native-purchases": "^8.0.0",
     "nativewind": "^4.0.0",
     "zustand": "^5.0.0",
-    "react-native-svg": "^15.0.0",
+    "react-native-svg": "15.8.0",
     "expo-secure-store": "~14.0.1",
     "@react-native-async-storage/async-storage": "1.23.1",
     "expo-status-bar": "~2.0.1",
