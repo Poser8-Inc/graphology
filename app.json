@@ -2,7 +2,7 @@
   "expo": {
     "name": "Graphology",
     "slug": "graphology",
-    "version": "1.0.0",
+    "version": "1.0.2",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
@@ -10,7 +10,9 @@
       "bundleIdentifier": "app.templari.graphology",
       "supportsTablet": false,
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Used to photograph handwriting samples for analysis.",
+        "NSPhotoLibraryUsageDescription": "Used to select a handwriting image from your library for analysis."
       }
     },
     "android": {
