@@ -11,8 +11,8 @@
       "supportsTablet": false,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSCameraUsageDescription": "Used to photograph handwriting samples for analysis.",
-        "NSPhotoLibraryUsageDescription": "Used to select a handwriting image from your library for analysis."
+        "NSCameraUsageDescription": "Graphology uses the camera to photograph your handwriting so we can analyze traits like slant, pressure, baseline, and letter formation. For example, write a short phrase on paper and Graphology will identify your dominant writing personality.",
+        "NSPhotoLibraryUsageDescription": "Graphology can analyze an existing handwriting sample from your photo library. For example, choose a photo of a handwritten letter or note and Graphology will interpret the slant, pressure, and letter formation."
       }
     },
     "android": {
