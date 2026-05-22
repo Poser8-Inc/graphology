@@ -8,7 +8,7 @@
     "newArchEnabled": true,
     "ios": {
       "bundleIdentifier": "app.templari.graphology",
-      "buildNumber": "8",
+      "buildNumber": "9",
       "supportsTablet": false,
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
