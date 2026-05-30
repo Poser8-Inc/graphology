@@ -1,4 +1,4 @@
-import { ScrollView, View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native'
+import { ScrollView, View, Text, TouchableOpacity, StyleSheet, Dimensions, Linking } from 'react-native'
 import { useRouter } from 'expo-router'
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme'
 
@@ -136,7 +136,7 @@ export default function HomeScreen() {
           <Text style={styles.footerLink}>Past Analyses</Text>
         </TouchableOpacity>
         <Text style={styles.footerDivider}>·</Text>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => Linking.openURL('https://templari.app/privacy')}>
           <Text style={styles.footerLink}>Privacy</Text>
         </TouchableOpacity>
       </View>
