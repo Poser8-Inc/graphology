@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   View,
   Text,
@@ -9,15 +9,19 @@ import {
   Image,
   ActivityIndicator,
   Animated,
+  Share,
 } from 'react-native'
 import { useRouter } from 'expo-router'
 import * as Haptics from 'expo-haptics'
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme'
 import { useStore } from '@/lib/store'
 import { analyzeHandwriting } from '@/lib/graphologyAnalyzer'
-import type { SectionKey } from '@/lib/graphologyAnalyzer'
+import type { GraphologyReport, SectionKey } from '@/lib/graphologyAnalyzer'
 import { saveReading } from '@/lib/supabase'
+import { saveReading as saveReadingLocal } from '@/lib/savedReadings'
+import { SECTION_EXPLAIN } from '@/lib/graphologyContent'
 import { HandwritingAnnotator } from '@/components/HandwritingAnnotator'
+import { log } from '@/lib/log'
 
 const { width } = Dimensions.get('window')
 
@@ -101,6 +105,42 @@ const SECTION_CONFIG: Array<{
   },
 ]
 
+function buildShareText(r: GraphologyReport): string {
+  const lines: string[] = ['Graphological Analysis', '']
+  lines.push('— Baseline —')
+  lines.push(r.baseline.detail)
+  lines.push('')
+  lines.push('— Slant —')
+  lines.push(r.slant.detail)
+  lines.push('')
+  lines.push('— Letter Size —')
+  lines.push(r.letterSize.detail)
+  lines.push('')
+  lines.push('— Pressure —')
+  lines.push(r.pressure.detail)
+  lines.push('')
+  lines.push('— Spacing —')
+  lines.push(r.spacing.detail)
+  lines.push('')
+  if (r.topTraits?.length) {
+    lines.push('— Notable Traits —')
+    for (const t of r.topTraits) lines.push(`• ${t}`)
+    lines.push('')
+  }
+  if (r.overallProfile?.core) {
+    lines.push('— Overall Profile —')
+    lines.push(r.overallProfile.core)
+    lines.push('')
+  }
+  if (r.forensicNote) {
+    lines.push('— Forensic Note —')
+    lines.push(r.forensicNote)
+    lines.push('')
+  }
+  lines.push('Generated with Graphology — templari.app')
+  return lines.join('\n')
+}
+
 export default function ReadingScreen() {
   const router = useRouter()
   const scrollRef = useRef<ScrollView>(null)
@@ -120,6 +160,26 @@ export default function ReadingScreen() {
   const decrementAnalyses = useStore((s) => s.decrementAnalyses)
   const userId = useStore((s) => s.userId)
   const resetAnalysis = useStore((s) => s.resetAnalysis)
+  const fullReport = useStore((s) => s.fullReport)
+
+  const [locallySaved, setLocallySaved] = useState(false)
+  const [expandedExplainers, setExpandedExplainers] = useState<Record<string, boolean>>({})
+
+  const toggleExplainer = useCallback((key: string) => {
+    setExpandedExplainers((prev) => ({ ...prev, [key]: !prev[key] }))
+  }, [])
+
+  const handleShare = useCallback(async () => {
+    if (!fullReport) return
+    try {
+      await Share.share({
+        message: buildShareText(fullReport),
+        title: 'Graphological analysis',
+      })
+    } catch (err) {
+      log.warn('[reading] share failed:', err)
+    }
+  }, [fullReport])
 
   // Initialize fade animations for each section
   SECTION_CONFIG.forEach((cfg) => {
@@ -139,7 +199,7 @@ export default function ReadingScreen() {
   // Start analysis on mount
   useEffect(() => {
     if (!capturedImageBase64) {
-      console.warn('[reading] No image base64 in store — redirecting to capture')
+      log.warn('[reading] No image base64 in store — redirecting to capture')
       router.replace('/capture')
       return
     }
@@ -194,6 +254,14 @@ export default function ReadingScreen() {
       decrementAnalyses()
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
 
+      // Always save locally so signed-out users still get a history view.
+      try {
+        await saveReadingLocal(report, capturedImageBase64 ?? null)
+        setLocallySaved(true)
+      } catch (saveErr) {
+        log.warn('[reading] local save failed:', saveErr)
+      }
+
       // Save to Supabase if user is logged in
       if (userId) {
         await saveReading({
@@ -220,7 +288,7 @@ export default function ReadingScreen() {
         })
       }
     } catch (err: any) {
-      console.error('[reading] Analysis failed:', err)
+      log.error('[reading] Analysis failed:', err)
       setAnalysisError(err?.message ?? 'Analysis failed. Please try again.')
       setAnalysisStatus('error')
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
@@ -242,10 +310,19 @@ export default function ReadingScreen() {
         <Text style={styles.errorIcon}>⚠</Text>
         <Text style={styles.errorTitle}>Analysis Failed</Text>
         <Text style={styles.errorText}>{analysisError}</Text>
-        <TouchableOpacity style={styles.errorRetryBtn} onPress={startAnalysis}>
+        <TouchableOpacity
+          style={styles.errorRetryBtn}
+          onPress={startAnalysis}
+          accessibilityRole="button"
+          accessibilityLabel="Try again"
+        >
           <Text style={styles.errorRetryText}>Try Again</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          accessibilityRole="link"
+          accessibilityLabel="Back to camera"
+        >
           <Text style={styles.errorBackText}>← Back to Camera</Text>
         </TouchableOpacity>
       </View>
@@ -353,6 +430,44 @@ export default function ReadingScreen() {
                 <Text style={styles.sectionContent}>{content}</Text>
               )}
 
+              {/* Per-section explainer: "what does this measurement mean?" */}
+              {isComplete && SECTION_EXPLAIN[cfg.key] && (
+                <View style={styles.explainerWrap}>
+                  <TouchableOpacity
+                    onPress={() => toggleExplainer(cfg.key)}
+                    style={styles.explainerToggle}
+                    accessibilityRole="button"
+                    accessibilityLabel={
+                      expandedExplainers[cfg.key]
+                        ? `Hide explainer for ${cfg.label}`
+                        : `Show explainer for ${cfg.label}`
+                    }
+                  >
+                    <Text style={[styles.explainerToggleText, { color: cfg.color }]}>
+                      {expandedExplainers[cfg.key]
+                        ? '− What this measurement means'
+                        : '+ What this measurement means'}
+                    </Text>
+                  </TouchableOpacity>
+                  {expandedExplainers[cfg.key] && (
+                    <View style={styles.explainerBody}>
+                      <Text style={styles.explainerLabel}>What is measured</Text>
+                      <Text style={styles.explainerText}>
+                        {SECTION_EXPLAIN[cfg.key].whatIsMeasured}
+                      </Text>
+                      <Text style={styles.explainerLabel}>What it reveals</Text>
+                      <Text style={styles.explainerText}>
+                        {SECTION_EXPLAIN[cfg.key].whatItReveals}
+                      </Text>
+                      <Text style={styles.explainerLabel}>How to read it</Text>
+                      <Text style={styles.explainerText}>
+                        {SECTION_EXPLAIN[cfg.key].howToReadIt}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              )}
+
               {/* Active section accent */}
               {isActive && (
                 <View style={[styles.activeAccent, { backgroundColor: cfg.color }]} />
@@ -370,21 +485,39 @@ export default function ReadingScreen() {
 
             <View style={styles.completeActions}>
               <TouchableOpacity
-                style={styles.newAnalysisBtn}
-                onPress={() => {
-                  resetAnalysis()
-                  router.replace('/instructions')
-                }}
+                style={styles.shareBtn}
+                onPress={handleShare}
+                accessibilityRole="button"
+                accessibilityLabel="Share report"
+                disabled={!fullReport}
               >
-                <Text style={styles.newAnalysisBtnText}>New Analysis</Text>
+                <Text style={styles.shareBtnText}>↗ Share</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.historyBtn}
                 onPress={() => router.push('/history')}
+                accessibilityRole="link"
+                accessibilityLabel="View history"
               >
-                <Text style={styles.historyBtnText}>View History</Text>
+                <Text style={styles.historyBtnText}>History</Text>
               </TouchableOpacity>
             </View>
+            <TouchableOpacity
+              style={styles.newAnalysisBtn}
+              onPress={() => {
+                resetAnalysis()
+                router.replace('/instructions')
+              }}
+              accessibilityRole="link"
+              accessibilityLabel="New analysis"
+            >
+              <Text style={styles.newAnalysisBtnText}>New Analysis</Text>
+            </TouchableOpacity>
+            {locallySaved && (
+              <Text style={styles.savedNote}>
+                ✓ Saved locally to history
+              </Text>
+            )}
           </View>
         )}
 
@@ -398,6 +531,8 @@ export default function ReadingScreen() {
           resetAnalysis()
           router.replace('/')
         }}
+        accessibilityRole="button"
+        accessibilityLabel="Close report"
       >
         <Text style={styles.floatingBackText}>×</Text>
       </TouchableOpacity>
@@ -721,6 +856,59 @@ const styles = StyleSheet.create({
   historyBtnText: {
     ...Typography.body,
     color: Colors.textMuted,
+  },
+  shareBtn: {
+    flex: 1,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.accent,
+    borderRadius: BorderRadius.md,
+    paddingVertical: Spacing.md,
+    alignItems: 'center',
+  },
+  shareBtnText: {
+    ...Typography.body,
+    color: Colors.accent,
+    fontWeight: '600',
+  },
+  savedNote: {
+    ...Typography.label,
+    color: Colors.textMuted,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    marginTop: Spacing.sm,
+  },
+  explainerWrap: {
+    paddingHorizontal: Spacing.md,
+    paddingBottom: Spacing.md,
+  },
+  explainerToggle: {
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.xs,
+  },
+  explainerToggleText: {
+    ...Typography.label,
+    letterSpacing: 0.5,
+    fontWeight: '600',
+  },
+  explainerBody: {
+    marginTop: Spacing.sm,
+    paddingTop: Spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+  },
+  explainerLabel: {
+    ...Typography.label,
+    color: Colors.accent,
+    textTransform: 'uppercase',
+    marginTop: Spacing.sm,
+    marginBottom: 4,
+  },
+  explainerText: {
+    ...Typography.bodySmall,
+    color: Colors.text,
+    marginBottom: Spacing.xs,
+    lineHeight: 20,
   },
 
   // Error

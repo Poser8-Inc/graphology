@@ -1,4 +1,30 @@
-const GRAPHOLOGY_ORACLE_URL = process.env.EXPO_PUBLIC_GRAPHOLOGY_ORACLE_URL!
+import { log } from './log'
+import { getAccessToken } from './supabase'
+
+function assertGraphologyOracleUrl(): string {
+  // Boot-time assertion: if this module is imported, the URL must exist.
+  // Surfacing this as an Error here means the failure is visible at the
+  // moment the analyzer is paged in (instructions / capture flow), not
+  // mid-fetch with a confusing "fetch undefined" symptom.
+  const url = process.env.EXPO_PUBLIC_GRAPHOLOGY_ORACLE_URL
+  if (!url) {
+    throw new Error(
+      '[graphology/analyzer] EXPO_PUBLIC_GRAPHOLOGY_ORACLE_URL is not set in .env'
+    )
+  }
+  return url
+}
+function assertSupabaseAnonKey(): string {
+  const key = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY
+  if (!key) {
+    throw new Error(
+      '[graphology/analyzer] EXPO_PUBLIC_SUPABASE_ANON_KEY is not set in .env'
+    )
+  }
+  return key
+}
+const GRAPHOLOGY_ORACLE_URL: string = assertGraphologyOracleUrl()
+const SUPABASE_ANON_KEY: string = assertSupabaseAnonKey()
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -119,17 +145,25 @@ export async function analyzeHandwriting(
   imageBase64: string,
   onStream: StreamCallback
 ): Promise<GraphologyReport> {
-  console.info('[graphologyAnalyzer] Starting analysis, image size:', imageBase64.length)
+  log.info('[graphologyAnalyzer] Starting analysis, image size:', imageBase64.length)
 
+  const accessToken = await getAccessToken()
   const response = await fetch(GRAPHOLOGY_ORACLE_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    // RN-specific: opt into response.body streaming on Android (off by default)
+    // @ts-ignore — reactNative is RN-only fetch option, not in fetch types
+    reactNative: { textStreaming: true },
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'apikey': SUPABASE_ANON_KEY,
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify({ imageBase64 }),
   })
 
   if (!response.ok) {
     const errText = await response.text()
-    console.error('[graphologyAnalyzer] Oracle error:', response.status, errText)
+    log.error('[graphologyAnalyzer] Oracle error:', response.status, errText)
     throw new Error(`Oracle returned ${response.status}: ${errText}`)
   }
 
@@ -177,7 +211,7 @@ export async function analyzeHandwriting(
   // Signal completion
   onStream({ section: currentSection, text: '', done: true })
 
-  console.info('[graphologyAnalyzer] Analysis complete, total chars:', rawText.length)
+  log.info('[graphologyAnalyzer] Analysis complete, total chars:', rawText.length)
 
   // Parse structured report from raw text
   return parseReport(rawText)

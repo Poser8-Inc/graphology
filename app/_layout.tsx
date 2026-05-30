@@ -1,10 +1,13 @@
 import { useEffect } from 'react'
 import { Stack } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
-import { View, StyleSheet } from 'react-native'
+import { Platform, View, StyleSheet } from 'react-native'
+import * as NavigationBar from 'expo-navigation-bar'
 import { Colors } from '@/constants/theme'
 import { supabase, getUserProfile, getAnalysesCount } from '@/lib/supabase'
 import { useStore } from '@/lib/store'
+import Purchases, { LOG_LEVEL } from 'react-native-purchases'
+import { log } from '@/lib/log'
 
 export default function RootLayout() {
   const setUserId = useStore((s) => s.setUserId)
@@ -12,10 +15,38 @@ export default function RootLayout() {
   const setAnalysesRemaining = useStore((s) => s.setAnalysesRemaining)
 
   useEffect(() => {
-    // Bootstrap auth session
+    if (Platform.OS === 'android') {
+      NavigationBar.setBehaviorAsync('overlay-swipe').catch(() => {})
+      NavigationBar.setVisibilityAsync('hidden').catch(() => {})
+    }
+  }, [])
+
+  useEffect(() => {
+    // RC public SDK keys are safe to embed client-side per RevenueCat docs.
+    // Fallback to hardcoded values so missing EXPO_PUBLIC_* env vars at build
+    // time don't silently skip Purchases.configure (bug seen on preview builds).
+    const apiKey = Platform.OS === 'ios'
+      ? (process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY || 'appl_QqITsjadHaiBaguVMrlwewFhkRV')
+      : (process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY || 'goog_TZvRzDvksKhXYqqDXCjjdPRorLx')
+    if (apiKey) {
+      if (__DEV__) Purchases.setLogLevel(LOG_LEVEL.WARN)
+      try {
+        Purchases.configure({ apiKey })
+      } catch (err) {
+        log.warn('[rc][graphology][configure] Purchases.configure failed:', err)
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    // Bootstrap auth session — sign in anonymously if no session yet
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         bootstrapUser(session.user.id)
+      } else {
+        supabase.auth.signInAnonymously().catch((err) => {
+          log.warn('[graphology][auth] signInAnonymously failed:', err)
+        })
       }
     })
 
@@ -63,6 +94,7 @@ export default function RootLayout() {
         />
         <Stack.Screen name="history" />
         <Stack.Screen name="learn" />
+        <Stack.Screen name="paywall" options={{ animation: 'slide_from_bottom', presentation: 'modal' }} />
       </Stack>
     </View>
   )

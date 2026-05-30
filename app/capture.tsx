@@ -13,8 +13,10 @@ import { CameraView, useCameraPermissions } from 'expo-camera'
 import * as ImagePicker from 'expo-image-picker'
 import * as ImageManipulator from 'expo-image-manipulator'
 import { useRouter } from 'expo-router'
+import Purchases from 'react-native-purchases'
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme'
 import { useStore } from '@/lib/store'
+import { log } from '@/lib/log'
 
 const { width, height } = Dimensions.get('window')
 
@@ -37,24 +39,27 @@ export default function CaptureScreen() {
   const setCapturedImageBase64 = useStore((s) => s.setCapturedImageBase64)
   const analysesRemaining = useStore((s) => s.analysesRemaining)
 
-  // Check free tier before allowing capture
-  const checkFreeTier = useCallback(() => {
-    if (analysesRemaining <= 0) {
-      Alert.alert(
-        'Out of Free Analyses',
-        'You\'ve used your 2 free analyses this month. Upgrade to Premium for unlimited analyses.',
-        [
-          { text: 'Not Now', style: 'cancel' },
-          { text: 'Upgrade', onPress: () => { /* open paywall */ } },
-        ]
-      )
+  // Check free tier before allowing capture — uses RevenueCat for premium check
+  const checkFreeTier = useCallback(async (): Promise<boolean> => {
+    let isPremium = false
+    try {
+      const customerInfo = await Purchases.getCustomerInfo()
+      isPremium = !!customerInfo.entitlements.active['premium']
+    } catch (err) {
+      log.warn('[rc][graphology][capture] getCustomerInfo failed:', err)
+      // isPremium stays false (defensive). Don't reroute to paywall on transient RC errors —
+      // free-tier counter-based gate below already enforces correct UX.
+    }
+
+    if (!isPremium && analysesRemaining <= 0) {
+      router.push('/paywall')
       return false
     }
     return true
-  }, [analysesRemaining])
+  }, [analysesRemaining, router])
 
   const handleCapture = useCallback(async () => {
-    if (!checkFreeTier()) return
+    if (!await checkFreeTier()) return
     if (!cameraRef.current || isCapturing) return
 
     setIsCapturing(true)
@@ -98,7 +103,7 @@ export default function CaptureScreen() {
       setPreviewBase64(manipulated.base64 ?? null)
       setScreenState('preview')
     } catch (err) {
-      console.error('[capture] Error taking photo:', err)
+      log.error('[capture] Error taking photo:', err)
       Alert.alert('Capture Error', 'Failed to take photo. Please try again.')
     } finally {
       setIsCapturing(false)
@@ -106,7 +111,7 @@ export default function CaptureScreen() {
   }, [cameraRef, isCapturing, checkFreeTier])
 
   const handleUploadFromPhotos = useCallback(async () => {
-    if (!checkFreeTier()) return
+    if (!await checkFreeTier()) return
 
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
     if (status !== 'granted') {
@@ -141,7 +146,7 @@ export default function CaptureScreen() {
       setPreviewBase64(manipulated.base64 ?? null)
       setScreenState('preview')
     } catch (err) {
-      console.error('[capture] Image processing error:', err)
+      log.error('[capture] Image processing error:', err)
       setScreenState('camera')
       Alert.alert('Processing Error', 'Could not process the selected image.')
     }
@@ -174,10 +179,20 @@ export default function CaptureScreen() {
     return (
       <View style={styles.center}>
         <Text style={styles.permText}>Camera access is required to capture handwriting.</Text>
-        <TouchableOpacity style={styles.permBtn} onPress={requestPermission}>
+        <TouchableOpacity
+          style={styles.permBtn}
+          onPress={requestPermission}
+          accessibilityRole="button"
+          accessibilityLabel="Grant camera access"
+        >
           <Text style={styles.permBtnText}>Grant Access</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.uploadBtn} onPress={handleUploadFromPhotos}>
+        <TouchableOpacity
+          style={styles.uploadBtn}
+          onPress={handleUploadFromPhotos}
+          accessibilityRole="button"
+          accessibilityLabel="Upload handwriting from photos"
+        >
           <Text style={styles.uploadBtnText}>Upload from Photos Instead</Text>
         </TouchableOpacity>
       </View>
@@ -199,10 +214,20 @@ export default function CaptureScreen() {
         </View>
 
         <View style={styles.previewActions}>
-          <TouchableOpacity style={styles.retakeBtn} onPress={handleRetake}>
+          <TouchableOpacity
+            style={styles.retakeBtn}
+            onPress={handleRetake}
+            accessibilityRole="button"
+            accessibilityLabel="Retake photo"
+          >
             <Text style={styles.retakeBtnText}>Retake</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.useBtn} onPress={handleUseThisSample}>
+          <TouchableOpacity
+            style={styles.useBtn}
+            onPress={handleUseThisSample}
+            accessibilityRole="button"
+            accessibilityLabel="Use this sample"
+          >
             <Text style={styles.useBtnText}>Use This Sample</Text>
             <Text style={styles.useBtnArrow}>→</Text>
           </TouchableOpacity>
@@ -246,7 +271,12 @@ export default function CaptureScreen() {
 
             {/* Shutter + upload row */}
             <View style={styles.shutterRow}>
-              <TouchableOpacity style={styles.uploadPhotoBtn} onPress={handleUploadFromPhotos}>
+              <TouchableOpacity
+                style={styles.uploadPhotoBtn}
+                onPress={handleUploadFromPhotos}
+                accessibilityRole="button"
+                accessibilityLabel="Upload from photos"
+              >
                 <Text style={styles.uploadPhotoIcon}>⬆</Text>
                 <Text style={styles.uploadPhotoLabel}>Upload</Text>
               </TouchableOpacity>
@@ -255,6 +285,9 @@ export default function CaptureScreen() {
                 style={[styles.shutterBtn, isCapturing && styles.shutterBtnDisabled]}
                 onPress={handleCapture}
                 disabled={isCapturing}
+                accessibilityRole="button"
+                accessibilityLabel="Capture photo"
+                accessibilityState={{ disabled: isCapturing }}
               >
                 {isCapturing ? (
                   <ActivityIndicator color={Colors.ink} size="small" />
@@ -270,7 +303,12 @@ export default function CaptureScreen() {
             <Text style={styles.tapInstruction}>Tap to capture</Text>
 
             {/* Back button */}
-            <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+            <TouchableOpacity
+              style={styles.backBtn}
+              onPress={() => router.back()}
+              accessibilityRole="link"
+              accessibilityLabel="Back"
+            >
               <Text style={styles.backText}>← Back</Text>
             </TouchableOpacity>
           </View>

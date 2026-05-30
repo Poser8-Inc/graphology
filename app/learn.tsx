@@ -1,6 +1,7 @@
 import { ScrollView, View, Text, TouchableOpacity, StyleSheet } from 'react-native'
 import { useRouter } from 'expo-router'
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme'
+import { PRINCIPLES, VALIDITY_NOTE } from '@/lib/graphologyContent'
 
 interface HistorianEntry {
   name: string
@@ -186,13 +187,37 @@ export default function LearnScreen() {
     >
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => router.back()}
+          accessibilityRole="link"
+          accessibilityLabel="Back"
+        >
           <Text style={styles.backText}>← Back</Text>
         </TouchableOpacity>
         <Text style={styles.title}>The Science of Graphology</Text>
         <Text style={styles.subtitle}>
           Four centuries of handwriting analysis — from physicians to the FBI
         </Text>
+      </View>
+
+      {/* Why it works — principles */}
+      <View style={styles.section}>
+        <Text style={styles.sectionHeader}>Why graphology works (and where it doesn&apos;t)</Text>
+        <Text style={styles.sectionIntro}>
+          Five principles from the European tradition, plus an honest
+          calibration about what the science actually supports.
+        </Text>
+        {PRINCIPLES.map((p, i) => (
+          <View key={i} style={styles.historianCard}>
+            <Text style={styles.historianName}>{p.title}</Text>
+            <Text style={[styles.historianContribution, { marginTop: Spacing.sm }]}>{p.body}</Text>
+          </View>
+        ))}
+        <View style={[styles.historianCard, { borderColor: Colors.accent, borderWidth: 1 }]}>
+          <Text style={[styles.historianName, { color: Colors.accent }]}>{VALIDITY_NOTE.title}</Text>
+          <Text style={[styles.historianContribution, { marginTop: Spacing.sm }]}>{VALIDITY_NOTE.body}</Text>
+        </View>
       </View>
 
       {/* History section */}
@@ -309,6 +334,8 @@ export default function LearnScreen() {
       <TouchableOpacity
         style={styles.ctaBtn}
         onPress={() => router.push('/instructions')}
+        accessibilityRole="link"
+        accessibilityLabel="Analyze my handwriting"
         activeOpacity={0.85}
       >
         <Text style={styles.ctaBtnText}>Analyze My Handwriting</Text>
