@@ -48,8 +48,8 @@
       },
       "android": {
         "serviceAccountKeyPath": "/home/khoward/.openclaw/credentials/play-publisher-sa.json",
-        "track": "internal",
-        "releaseStatus": "draft"
+        "track": "alpha",
+        "releaseStatus": "completed"
       }
     }
   }
