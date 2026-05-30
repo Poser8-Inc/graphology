@@ -2,16 +2,30 @@
   "expo": {
     "name": "Graphology",
     "slug": "graphology",
-    "version": "1.0.0",
+    "version": "1.0.2",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "ios": {
       "bundleIdentifier": "app.templari.graphology",
-      "supportsTablet": false
+      "buildNumber": "9",
+      "supportsTablet": false,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Graphology uses the camera to photograph your handwriting so we can analyze traits like slant, pressure, baseline, and letter formation. For example, write a short phrase on paper and Graphology will identify your dominant writing personality.",
+        "NSPhotoLibraryUsageDescription": "Graphology can analyze an existing handwriting sample from your photo library. For example, choose a photo of a handwritten letter or note and Graphology will interpret the slant, pressure, and letter formation."
+      }
     },
     "android": {
-      "package": "app.templari.graphology"
+      "package": "app.templari.graphology",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0A0908"
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "plugins": [
       "expo-router",
@@ -21,7 +35,34 @@
         {
           "photosPermission": "Allow Graphology to access your photos to analyze handwriting samples."
         }
-      ]
-    ]
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "kotlinVersion": "1.9.25",
+            "targetSdkVersion": 35,
+            "compileSdkVersion": 35
+          }
+        }
+      ],
+      "expo-secure-store"
+    ],
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0A0908"
+    },
+    "scheme": "graphology",
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "77d3df15-4f62-4a24-a99d-c1edecf9bb20"
+      }
+    },
+    "owner": "poser8"
   }
 }
