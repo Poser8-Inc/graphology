@@ -7,6 +7,8 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  Platform,
+  Linking,
 } from 'react-native'
 import { useRouter } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
@@ -34,6 +36,14 @@ const FEATURES = [
 ]
 
 type Plan = 'monthly' | 'annual' | 'lifetime'
+
+// react-native-purchases has no web SDK. On web the paywall acts as a
+// discovery surface — pricing + features stay visible, but the CTAs
+// deep-link to the App Store / Play Store to complete the purchase
+// on a native device.
+const IS_WEB = Platform.OS === 'web'
+const APP_STORE_URL = 'https://apps.apple.com/app/id6767143711'
+const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=app.templari.graphology'
 
 // Ink-blot animation for the hero
 function InkOrb() {
@@ -86,6 +96,8 @@ export default function PaywallScreen() {
   const [offeringsError, setOfferingsError] = useState<string | null>(null)
 
   useEffect(() => {
+    // Skip RC offerings fetch on web — Purchases isn't configured there.
+    if (IS_WEB) return
     let cancelled = false
     Purchases.getOfferings()
       .then((offerings) => {
@@ -111,12 +123,15 @@ export default function PaywallScreen() {
     return () => { cancelled = true }
   }, [])
 
-  const monthlyPrice = packages.monthly?.product.priceString ?? '—'
-  const annualPrice = packages.annual?.product.priceString ?? '—'
-  const lifetimePrice = packages.lifetime?.product.priceString ?? '—'
+  // Fallback prices for web (RC has no web SDK) and as a safety net on
+  // native when offerings fetch fails. Keep in sync with the Apprentice
+  // Suite tier ladder.
+  const monthlyPrice = packages.monthly?.product.priceString ?? '$9.99'
+  const annualPrice = packages.annual?.product.priceString ?? '$71.99'
+  const lifetimePrice = packages.lifetime?.product.priceString ?? '$199'
   const annualMonthly = packages.annual
     ? `$${(packages.annual.product.price / 12).toFixed(2)}/mo`
-    : '—'
+    : '$6.00/mo'
 
   const PLANS = [
     {
@@ -262,49 +277,89 @@ export default function PaywallScreen() {
 
         {/* CTA */}
         <Animated.View entering={FadeInDown.delay(550)} style={styles.ctaBlock}>
-          <TouchableOpacity
-            style={[
-              styles.ctaBtn,
-              isPurchasing && styles.ctaBtnLoading,
-              (offeringsError !== null || !packages[selectedPlan]) && styles.ctaBtnLoading,
-            ]}
-            onPress={handlePurchase}
-            disabled={
-              isPurchasing ||
-              isRestoring ||
-              offeringsError !== null ||
-              !packages[selectedPlan]
-            }
-            accessibilityRole="button"
-            accessibilityLabel="Unlock GRAPHOLOGY Plus"
-            accessibilityState={{ disabled: isPurchasing || isRestoring || offeringsError !== null || !packages[selectedPlan] }}
-            activeOpacity={0.85}
-          >
-            {isPurchasing ? (
-              <ActivityIndicator color={Colors.paper} />
-            ) : (
-              <Text style={styles.ctaBtnText}>Unlock GRAPHOLOGY+</Text>
-            )}
-          </TouchableOpacity>
+          {IS_WEB ? (
+            <>
+              <Text style={styles.webContinueHeader}>
+                Continue in the app to subscribe
+              </Text>
+              <View style={styles.storeBtnRow}>
+                <TouchableOpacity
+                  style={styles.storeBtn}
+                  onPress={() => { Linking.openURL(APP_STORE_URL).catch(() => {}) }}
+                  accessibilityRole="link"
+                  accessibilityLabel="Open in App Store"
+                  activeOpacity={0.85}
+                >
+                  <View style={styles.storeBtnLabelCol}>
+                    <Text style={styles.storeBtnSmall}>Download on the</Text>
+                    <Text style={styles.storeBtnLarge}>App Store</Text>
+                  </View>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.storeBtn}
+                  onPress={() => { Linking.openURL(PLAY_STORE_URL).catch(() => {}) }}
+                  accessibilityRole="link"
+                  accessibilityLabel="Get it on Google Play"
+                  activeOpacity={0.85}
+                >
+                  <View style={styles.storeBtnLabelCol}>
+                    <Text style={styles.storeBtnSmall}>Get it on</Text>
+                    <Text style={styles.storeBtnLarge}>Google Play</Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+              <Text style={styles.legal}>
+                Subscriptions are sold through Apple and Google in-app purchase.
+                Purchase on either platform unlocks GRAPHOLOGY+ across your devices.
+              </Text>
+            </>
+          ) : (
+            <>
+              <TouchableOpacity
+                style={[
+                  styles.ctaBtn,
+                  isPurchasing && styles.ctaBtnLoading,
+                  (offeringsError !== null || !packages[selectedPlan]) && styles.ctaBtnLoading,
+                ]}
+                onPress={handlePurchase}
+                disabled={
+                  isPurchasing ||
+                  isRestoring ||
+                  offeringsError !== null ||
+                  !packages[selectedPlan]
+                }
+                accessibilityRole="button"
+                accessibilityLabel="Unlock GRAPHOLOGY Plus"
+                accessibilityState={{ disabled: isPurchasing || isRestoring || offeringsError !== null || !packages[selectedPlan] }}
+                activeOpacity={0.85}
+              >
+                {isPurchasing ? (
+                  <ActivityIndicator color={Colors.paper} />
+                ) : (
+                  <Text style={styles.ctaBtnText}>Unlock GRAPHOLOGY+</Text>
+                )}
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.restoreBtn}
-            onPress={handleRestore}
-            disabled={isPurchasing || isRestoring}
-            accessibilityRole="button"
-            accessibilityLabel="Restore purchases"
-            accessibilityState={{ disabled: isPurchasing || isRestoring }}
-          >
-            {isRestoring ? (
-              <ActivityIndicator color={Colors.textMuted} size="small" />
-            ) : (
-              <Text style={styles.restoreBtnText}>Restore Purchases</Text>
-            )}
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.restoreBtn}
+                onPress={handleRestore}
+                disabled={isPurchasing || isRestoring}
+                accessibilityRole="button"
+                accessibilityLabel="Restore purchases"
+                accessibilityState={{ disabled: isPurchasing || isRestoring }}
+              >
+                {isRestoring ? (
+                  <ActivityIndicator color={Colors.textMuted} size="small" />
+                ) : (
+                  <Text style={styles.restoreBtnText}>Restore Purchases</Text>
+                )}
+              </TouchableOpacity>
 
-          <Text style={styles.legal}>
-            Subscription auto-renews. Cancel anytime in App Store / Google Play settings.
-          </Text>
+              <Text style={styles.legal}>
+                Subscription auto-renews. Cancel anytime in App Store / Google Play settings.
+              </Text>
+            </>
+          )}
         </Animated.View>
       </ScrollView>
     </SafeAreaView>
@@ -508,5 +563,49 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     opacity: 0.7,
     paddingHorizontal: Spacing.md,
+  },
+  webContinueHeader: {
+    ...Typography.h3,
+    color: Colors.accent,
+    textAlign: 'center',
+    letterSpacing: 0.4,
+    marginTop: Spacing.sm,
+  },
+  storeBtnRow: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+    justifyContent: 'center',
+    width: '100%',
+    marginTop: Spacing.sm,
+  },
+  storeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.ink,
+    borderRadius: BorderRadius.lg,
+    paddingVertical: 12,
+    paddingHorizontal: Spacing.lg,
+    flex: 1,
+    maxWidth: 200,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  storeBtnLabelCol: {
+    alignItems: 'center',
+  },
+  storeBtnSmall: {
+    ...Typography.label,
+    color: Colors.paper,
+    fontSize: 10,
+    letterSpacing: 0.5,
+    opacity: 0.85,
+  },
+  storeBtnLarge: {
+    ...Typography.h3,
+    color: Colors.paper,
+    fontWeight: '700',
+    fontSize: 16,
+    letterSpacing: 0.3,
   },
 })

@@ -22,6 +22,9 @@ export default function RootLayout() {
   }, [])
 
   useEffect(() => {
+    // react-native-purchases has no web SDK — Purchases.configure throws on
+    // web. Skip the call; web paywall is a discovery surface.
+    if (Platform.OS === 'web') return
     // RC public SDK keys are safe to embed client-side per RevenueCat docs.
     // Fallback to hardcoded values so missing EXPO_PUBLIC_* env vars at build
     // time don't silently skip Purchases.configure (bug seen on preview builds).
