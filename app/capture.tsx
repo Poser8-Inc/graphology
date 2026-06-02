@@ -17,6 +17,7 @@ import Purchases from 'react-native-purchases'
 import { Colors, Typography, Spacing, BorderRadius, Shadows } from '@/constants/theme'
 import { useStore } from '@/lib/store'
 import { log } from '@/lib/log'
+import { hasPremiumAccess } from '@/lib/entitlements'
 
 const { width, height } = Dimensions.get('window')
 
@@ -44,7 +45,7 @@ export default function CaptureScreen() {
     let isPremium = false
     try {
       const customerInfo = await Purchases.getCustomerInfo()
-      isPremium = !!customerInfo.entitlements.active['premium']
+      isPremium = hasPremiumAccess(customerInfo)
     } catch (err) {
       log.warn('[rc][graphology][capture] getCustomerInfo failed:', err)
       // isPremium stays false (defensive). Don't reroute to paywall on transient RC errors —

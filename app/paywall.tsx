@@ -22,6 +22,7 @@ import Animated, {
 import Purchases, { type PurchasesPackage } from 'react-native-purchases'
 import { Colors, Spacing, BorderRadius, Typography } from '@/constants/theme'
 import { log } from '@/lib/log'
+import { hasPremiumAccess } from '@/lib/entitlements'
 
 const FEATURES = [
   { glyph: '—', label: 'Unlimited handwriting analyses' },
@@ -152,7 +153,7 @@ export default function PaywallScreen() {
     setIsPurchasing(true)
     try {
       const { customerInfo } = await Purchases.purchasePackage(pkg)
-      if (customerInfo.entitlements.active['premium']) {
+      if (hasPremiumAccess(customerInfo)) {
         router.back()
         Alert.alert('Welcome to GRAPHOLOGY+', 'You now have unlimited handwriting analyses.')
       }
@@ -170,7 +171,7 @@ export default function PaywallScreen() {
     setIsRestoring(true)
     try {
       const customerInfo = await Purchases.restorePurchases()
-      if (customerInfo.entitlements.active['premium']) {
+      if (hasPremiumAccess(customerInfo)) {
         router.back()
         Alert.alert('Purchases Restored', 'Your premium access has been restored.')
       } else {
