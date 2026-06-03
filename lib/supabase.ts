@@ -68,18 +68,12 @@ export async function getAnalysesCount(userId: string): Promise<number> {
   return count ?? 0
 }
 
-export async function getUserProfile(userId: string): Promise<UserProfile | null> {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single()
-
-  if (error) {
-    log.error('[supabase] getUserProfile error:', error.message)
-    return null
-  }
-  return data
+export async function getUserProfile(_userId: string): Promise<UserProfile | null> {
+  // Stubbed: the `profiles` table doesn't exist in the Suite-shared
+  // Supabase project (jpwmfztcprbwkpbkyiqm). Re-implement once Templari
+  // ID Phase 4 lands the cross-app profile schema. The graphology_readings
+  // queries below are correct and stay live.
+  return null
 }
 
 export async function getPastReadings(userId: string, limit = 20): Promise<GraphologyReading[]> {
