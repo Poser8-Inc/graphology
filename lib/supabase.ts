@@ -54,55 +54,27 @@ export interface UserProfile {
   created_at: string
 }
 
-// Helpers
-export async function getAnalysesCount(userId: string): Promise<number> {
-  const { count, error } = await supabase
-    .from('graphology_readings')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', userId)
-
-  if (error) {
-    log.error('[supabase] getAnalysesCount error:', error.message)
-    return 0
-  }
-  return count ?? 0
+// Helpers — fully stubbed: neither `profiles` nor `graphology_readings`
+// exist in the Suite-shared Supabase project (jpwmfztcprbwkpbkyiqm). The
+// previous PR #7 only stubbed getUserProfile on the (wrong) assumption
+// that the readings queries worked; web smoke after deploy showed
+// graphology_readings 404s on every page load too. Strip all four.
+// Re-implement once Templari ID Phase 4 lands the cross-app profile
+// schema and we provision per-app reading tables.
+export async function getAnalysesCount(_userId: string): Promise<number> {
+  return 0
 }
 
 export async function getUserProfile(_userId: string): Promise<UserProfile | null> {
-  // Stubbed: the `profiles` table doesn't exist in the Suite-shared
-  // Supabase project (jpwmfztcprbwkpbkyiqm). Re-implement once Templari
-  // ID Phase 4 lands the cross-app profile schema. The graphology_readings
-  // queries below are correct and stay live.
   return null
 }
 
-export async function getPastReadings(userId: string, limit = 20): Promise<GraphologyReading[]> {
-  const { data, error } = await supabase
-    .from('graphology_readings')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-    .limit(limit)
-
-  if (error) {
-    log.error('[supabase] getPastReadings error:', error.message)
-    return []
-  }
-  return data ?? []
+export async function getPastReadings(_userId: string, _limit = 20): Promise<GraphologyReading[]> {
+  return []
 }
 
 export async function saveReading(
-  reading: Omit<GraphologyReading, 'id' | 'created_at'>
+  _reading: Omit<GraphologyReading, 'id' | 'created_at'>
 ): Promise<GraphologyReading | null> {
-  const { data, error } = await supabase
-    .from('graphology_readings')
-    .insert(reading)
-    .select()
-    .single()
-
-  if (error) {
-    log.error('[supabase] saveReading error:', error.message)
-    return null
-  }
-  return data
+  return null
 }
